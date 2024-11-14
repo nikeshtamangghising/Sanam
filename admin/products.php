@@ -88,7 +88,6 @@ if (isset($_GET['delete'])) {
 
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,15 +114,49 @@ if (isset($_GET['delete'])) {
          <input type="text" name="name" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter product name" maxlength="100" required>
          <input type="number" name="price" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter product price" min="0" max="9999999999" required onkeypress="if(this.value.length == 10) return false;">
          <select name="category" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            <option value="" disabled selected>Select category --</option>
-            <option value="t-shirts">T-Shirts</option>
-            <option value="dresses">Dresses</option>
-            <option value="jeans">Jeans</option>
-            <option value="jackets">Jackets</option>
-            <option value="accessories">Accessories</option>
+            <option value="" disabled selected>Select Category --</option>
+            <option value="hat">Hat</option>
+                <option value="one-piece">One Piece</option>
+                <option value="saree">Saree</option>
+                <option value="kurta">Kurta</option>
+                <option value="shawl">Shawl</option>
+                <option value="top">Top</option>
+                <option value="t-shirt">T-Shirt</option>
+                <option value="pant">Pant</option>
+                <option value="socks">Socks</option>
+                <option value="heels">Heels</option>
+                <option value="boots">Boots</option>
+                <option value="bra-panty">Bra & Panty</option>
+                <option value="handkerchief">Handkerchief</option>
+                <option value="muffler">Muffler</option>
          </select>
-         <input type="text" name="color" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter color" maxlength="50">
-         <select name="gender" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+
+         <!-- Size Selection -->
+         <select name="size" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+         <option value="" disabled selected>Select Size --</option>
+            <option value="xs">XS</option>
+            <option value="s">S</option>
+            <option value="m">M</option>
+            <option value="l">L</option>
+            <option value="xl">XL</option>
+         </select>
+         <!-- Size Selection -->
+         <select name="color" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+         <option value="" disabled selected>Select Color --</option>
+        <option value="red">Red</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+        <option value="yellow">Yellow</option>
+        <option value="black">Black</option>
+        <option value="white">White</option>
+        <option value="purple">Purple</option>
+        <option value="pink">Pink</option>
+        <option value="orange">Orange</option>
+        <option value="gray">Gray</option>
+        <option value="brown">Brown</option>
+        <option value="indigo">Indigo</option>
+         </select>
+ <select name="gender" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="child">Child</option>
@@ -132,28 +165,19 @@ if (isset($_GET['delete'])) {
          <input type="number" name="rating" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter product rating (1-5)" min="1" max="5" step="0.1">
          <input type="number" name="stock_quantity" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter stock quantity" min="0">
          <input type="number" name="weight" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter product weight" min="0" step="0.1">
-         <input type="number" name="shipping_cost" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter shipping cost" min="0">
-         <input type="text" name="slug" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter SEO slug" maxlength="100">
-         <textarea name="meta_description" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter product meta description" maxlength="255"></textarea>
-         <input type="text" name="seo_keywords" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter SEO keywords (comma separated)" maxlength="255">
-         <input type="file" name="image" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-         
-         <!-- Product Variants Section -->
-         <h3 class="text-xl font-semibold mb-4">Product Variants</h3>
-         <div class="variant-inputs">
-            <div class="variant-group mb-4">
-                <input type="text" name="variant_sizes[]" class="w-full p-4 border border-gray-300 rounded-lg mb-2" placeholder="Enter variant size (e.g., S, M, L)" required>
-                <input type="number" name="variant_stocks[]" class="w-full p-4 border border-gray-300 rounded-lg mb-2" placeholder="Enter stock for this size" required min="0">
-            </div>
-         </div>
-         
-         <button type="button" onclick="addVariant()" class="mb-4 p-2 bg-blue-500 text-white rounded-md">Add Another Variant</button>
+         <input type="number" name="shipping_cost" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter shipping cost" min="0" step="0.1">
+         <input type="text" name="slug" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter product slug" maxlength="255">
+         <textarea name="meta_description" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Enter meta description"></textarea>
+         <input type="text" name="seo_keywords" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter SEO keywords" maxlength="255">
 
-         <!-- Submit Button -->
-         <button type="submit" name="add_product" class="w-full p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none">Add Product</button>
+         <!-- Product Image -->
+         <input type="file" name="image" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required accept="image/*">
+         <button type="submit" name="add_product" class="w-full bg-blue-600 text-white py-3 rounded-lg">Add Product</button>
       </form>
    </div>
 </section>
+
+
 <!-- Show Products -->
 <section class="py-12">
    <div class="container mx-auto px-4">

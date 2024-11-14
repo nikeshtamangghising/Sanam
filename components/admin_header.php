@@ -29,7 +29,6 @@ if (isset($message)) {
 
       <!-- Icons and Profile Section -->
       <div class="flex items-center space-x-4 relative">
-         <div id="menu-btn" class="fas fa-bars text-2xl md:hidden cursor-pointer"></div>
          <div id="user-btn" class="fas fa-user text-2xl cursor-pointer" onclick="toggleProfileDropdown()"></div>
 
          <!-- Profile Dropdown (Initially hidden) -->

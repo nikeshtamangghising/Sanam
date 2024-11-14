@@ -6,7 +6,7 @@ session_start();
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 } else {
-    header('location:home.php');
+    header('location:login.php');
     exit;
 }
 
@@ -69,8 +69,6 @@ foreach ($cart_items as $item) {
    <!-- TailwindCSS CDN -->
    <script src="https://cdn.tailwindcss.com"></script>
 
-   <!-- Custom CSS file link -->
-   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="flex flex-col min-h-screen">
 

@@ -1,18 +1,19 @@
 <?php
-
 include 'components/connect.php';
 
-session_start();
+// Only start session if it's not already active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-if(isset($_SESSION['user_id'])){
-   $user_id = $_SESSION['user_id'];
-}else{
-   $user_id = '';
-};
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) {
+  header('Location: login.php'); // Redirect to login if not logged in
+}
 
-include 'components/add_cart.php';
-
+$user_id = $_SESSION['user_id']; // Get the logged-in user's ID
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

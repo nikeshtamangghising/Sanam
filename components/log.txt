@@ -1,0 +1,45 @@
+Received Data: Array
+(
+    [user_id] => 11
+    [product_id] => 2
+    [product_name] => Sports Sneakers
+    [product_price] => 85
+    [quantity] => 1
+)
+
+Received Data: Array
+(
+    [user_id] => 11
+    [product_id] => 2
+    [product_name] => Sports Sneakers
+    [product_price] => 85
+    [quantity] => 1
+)
+
+Received Data: Array
+(
+    [user_id] => 11
+    [product_id] => 1
+    [product_name] => Leather Jacket
+    [product_price] => 120
+    [quantity] => 1
+)
+
+Received Data: Array
+(
+    [user_id] => 11
+    [product_id] => 3
+    [product_name] => Red Dress
+    [product_price] => 150
+    [quantity] => 1
+)
+
+Received Data: Array
+(
+    [user_id] => 11
+    [product_id] => 6
+    [product_name] => dsad
+    [product_price] => 231
+    [quantity] => 1
+)
+
