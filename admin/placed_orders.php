@@ -11,13 +11,23 @@ if (!isset($admin_id)) {
 }
 
 if (isset($_POST['update_payment'])) {
-
    $order_id = $_POST['order_id'];
    $payment_status = $_POST['payment_status'];
-   $update_status = $conn->prepare("UPDATE `orders` SET payment_status = ? WHERE id = ?");
-   $update_status->execute([$payment_status, $order_id]);
-   $message[] = 'Payment status updated!';
 
+   // Ensure a valid payment status is selected
+   if (!empty($payment_status)) {
+      // Update payment status in the database
+      $update_status = $conn->prepare("UPDATE `orders` SET payment_status = ? WHERE id = ?");
+      $update_status->execute([$payment_status, $order_id]);
+
+      // Success message
+      $message[] = 'Payment status updated!';
+
+      // Reload the page after updating
+      echo '<script>window.location.href = window.location.href;</script>';
+   } else {
+      $message[] = 'Please select a valid payment status!';
+   }
 }
 
 if (isset($_GET['delete'])) {
@@ -43,7 +53,6 @@ if (isset($_GET['delete'])) {
    <!-- Tailwind CSS CDN -->
    <script src="https://cdn.tailwindcss.com"></script>
 
-
 </head>
 <body class="bg-gray-100 text-gray-800">
 
@@ -57,30 +66,42 @@ if (isset($_GET['delete'])) {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
          <?php
-         $select_orders = $conn->prepare("SELECT * FROM `orders`");
+         $select_orders = $conn->prepare("SELECT o.*, p.name AS product_name, pv.size, pv.color, u.name AS user_name, u.email AS user_email, u.number AS user_number, u.address AS user_address
+                                         FROM `orders` o
+                                         LEFT JOIN `products` p ON o.product_id = p.id
+                                         LEFT JOIN `product_variants` pv ON o.variants_id = pv.id
+                                         LEFT JOIN `users` u ON o.user_id = u.id");
          $select_orders->execute();
          if ($select_orders->rowCount() > 0) {
             while ($fetch_orders = $select_orders->fetch(PDO::FETCH_ASSOC)) {
          ?>
          <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300">
             <p><strong>User ID:</strong> <span class="font-medium"><?= $fetch_orders['user_id']; ?></span></p>
+            <p><strong>User Name:</strong> <span class="font-medium"><?= $fetch_orders['user_name']; ?></span></p>
+            <p><strong>User Email:</strong> <span class="font-medium"><?= $fetch_orders['user_email']; ?></span></p>
+            <p><strong>User Phone:</strong> <span class="font-medium"><?= $fetch_orders['user_number']; ?></span></p>
+            <p><strong>User Address:</strong> <span class="font-medium"><?= $fetch_orders['user_address']; ?></span></p>
             <p><strong>Placed On:</strong> <span class="font-medium"><?= $fetch_orders['placed_on']; ?></span></p>
-            <p><strong>Name:</strong> <span class="font-medium"><?= $fetch_orders['name']; ?></span></p>
-            <p><strong>Email:</strong> <span class="font-medium"><?= $fetch_orders['email']; ?></span></p>
-            <p><strong>Phone:</strong> <span class="font-medium"><?= $fetch_orders['number']; ?></span></p>
-            <p><strong>Address:</strong> <span class="font-medium"><?= $fetch_orders['address']; ?></span></p>
+            <p><strong>Order Name:</strong> <span class="font-medium"><?= $fetch_orders['product_name']; ?></span></p>
+            <p><strong>Variant:</strong> <span class="font-medium"><?= $fetch_orders['size']; ?>, <?= $fetch_orders['color']; ?></span></p>
             <p><strong>Total Products:</strong> <span class="font-medium"><?= $fetch_orders['total_products']; ?></span></p>
-            <p><strong>Total Price:</strong> <span class="font-medium">$<?= $fetch_orders['total_price']; ?>/-</span></p>
+            <p><strong>Total Price:</strong> <span class="font-medium">Rs<?= $fetch_orders['total_price']; ?>/-</span></p>
             <p><strong>Payment Method:</strong> <span class="font-medium"><?= $fetch_orders['method']; ?></span></p>
+            <p><strong>Payment Status:</strong> <span class="font-medium"><?= ucfirst($fetch_orders['payment_status']); ?></span></p>
+            <p><strong>Order Created At:</strong> <span class="font-medium"><?= $fetch_orders['created_at']; ?></span></p>
+            <p><strong>Order Updated At:</strong> <span class="font-medium"><?= $fetch_orders['updated_at']; ?></span></p>
 
             <form action="" method="POST" class="mt-4">
                <input type="hidden" name="order_id" value="<?= $fetch_orders['id']; ?>">
                <div class="mb-4">
-                  <label for="payment_status" class="block text-sm font-medium text-gray-700">Payment Status</label>
+                  <label for="payment_status" class="block text-sm font-medium text-gray-700">Update Payment Status</label>
                   <select name="payment_status" id="payment_status" class="w-full p-4 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                     <option value="" selected disabled><?= ucfirst($fetch_orders['payment_status']); ?></option>
-                     <option value="pending">Pending</option>
-                     <option value="completed">Completed</option>
+                     <!-- Ensure the allowed statuses are shown -->
+                     <option value="pending" <?= ($fetch_orders['payment_status'] == 'pending') ? 'selected' : ''; ?>>Pending</option>
+                     <option value="completed" <?= ($fetch_orders['payment_status'] == 'completed') ? 'selected' : ''; ?>>Completed</option>
+                     <option value="paid" <?= ($fetch_orders['payment_status'] == 'paid') ? 'selected' : ''; ?>>Paid</option>
+                     <option value="failed" <?= ($fetch_orders['payment_status'] == 'failed') ? 'selected' : ''; ?>>Failed</option>
+                     <option value="refunded" <?= ($fetch_orders['payment_status'] == 'refunded') ? 'selected' : ''; ?>>Refunded</option>
                   </select>
                </div>
 

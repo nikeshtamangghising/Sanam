@@ -49,29 +49,38 @@ if (isset($_POST['submit'])) {
             $updated_at = date('Y-m-d H:i:s');
 
             try {
-                // Fetch cart items with product details
-                $select_cart = $conn->prepare("SELECT c.*, p.name AS product_name, p.price AS product_price, p.image AS product_image FROM `cart` c INNER JOIN `products` p ON c.product_id = p.id WHERE c.user_id = ?");
+                // Fetch cart items with product and variant details
+                $select_cart = $conn->prepare("SELECT c.*, p.name AS product_name, pv.price AS variant_price, pv.size, pv.color
+                                              FROM `cart` c 
+                                              INNER JOIN `products` p ON c.product_id = p.id
+                                              LEFT JOIN `product_variants` pv ON c.variant_id = pv.id
+                                              WHERE c.user_id = ?");
                 $select_cart->execute([$user_id]);
 
                 // Initialize variables to store the total price and products list
                 $grand_total = 0;  // Initialize grand total to 0
                 $cart_items = '';
+                $total_quantity = 0;  // Track total quantity
 
                 while ($fetch_cart = $select_cart->fetch(PDO::FETCH_ASSOC)) {
                     $product_id = $fetch_cart['product_id'];
                     $product_name = $fetch_cart['product_name'];
-                    $product_price = $fetch_cart['product_price'];
+                    $variant_price = $fetch_cart['variant_price'];
+                    $variant_id = $fetch_cart['variant_id'];
                     $product_quantity = $fetch_cart['quantity'];
-                    $product_image = $fetch_cart['product_image'];
+                    $size = $fetch_cart['size'];
+                    $color = $fetch_cart['color'];
 
-                    // Add to total products and calculate grand total
-                    $cart_items .= $product_name . ' (Rs. ' . $product_price . ' x ' . $product_quantity . ') - ';
-                    $grand_total += ($product_price * $product_quantity); // Calculate total price
+                    // Calculate the total price, using variant price if available
+                    $price = $variant_price ?? 0;  // Use variant price if available
+                    $cart_items .= $product_name . ' (' . $size . ' / ' . $color . ') (Rs. ' . $price . ' x ' . $product_quantity . ') - ';
+                    $grand_total += ($price * $product_quantity); // Calculate total price
+                    $total_quantity += $product_quantity;  // Track total quantity
 
                     // Insert into orders table with the quantity
-                    $insert_order = $conn->prepare("INSERT INTO `orders`(user_id, product_id, number, method, address, total_products, total_price, placed_on, payment_status, created_at, updated_at, name, email) 
-                                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
-                    $insert_order->execute([$user_id, $product_id, $user_number, $method, $address, $product_quantity, $grand_total, $placed_on, $payment_status, $created_at, $updated_at, $user_name, $user_email]);
+                    $insert_order = $conn->prepare("INSERT INTO `orders`(user_id, product_id, variants_id, number, method, address, total_products, total_price, placed_on, payment_status, created_at, updated_at, name, email) 
+                                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    $insert_order->execute([$user_id, $product_id, $variant_id, $user_number, $method, $address, $total_quantity, $grand_total, $placed_on, $payment_status, $created_at, $updated_at, $user_name, $user_email]);
                 }
 
                 // Delete cart items after placing the order
@@ -105,7 +114,6 @@ if (isset($_POST['submit'])) {
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body class="bg-gray-100">
@@ -133,20 +141,26 @@ if (isset($_POST['submit'])) {
                 <h3 class="text-xl font-semibold mb-4">Cart Items</h3>
                 <div class="space-y-4">
                     <?php
-                    $select_cart = $conn->prepare("SELECT c.*, p.name AS product_name, p.price AS product_price, p.image AS product_image FROM `cart` c INNER JOIN `products` p ON c.product_id = p.id WHERE c.user_id = ?");
+                    $select_cart = $conn->prepare("SELECT c.*, p.name AS product_name,p.image AS product_image, pv.price AS variant_price, pv.size, pv.color 
+                                                  FROM `cart` c 
+                                                  INNER JOIN `products` p ON c.product_id = p.id 
+                                                  LEFT JOIN `product_variants` pv ON c.variant_id = pv.id 
+                                                  WHERE c.user_id = ?");
                     $select_cart->execute([$user_id]);
                     if ($select_cart->rowCount() > 0) {
                         while ($fetch_cart = $select_cart->fetch(PDO::FETCH_ASSOC)) {
                             $product_name = $fetch_cart['product_name'];
-                            $product_price = $fetch_cart['product_price'];
+                            $variant_price = $fetch_cart['variant_price'];
                             $product_quantity = $fetch_cart['quantity'];
-                            $product_image = $fetch_cart['product_image'];
+                            $size = $fetch_cart['size'];
+                            $color = $fetch_cart['color'];
+                            $price = $variant_price ?? 0;
                     ?>
                             <div class="flex items-center space-x-4">
-                                <img src="uploaded_img/<?= htmlspecialchars($product_image); ?>" alt="<?= htmlspecialchars($product_name); ?>" class="w-16 h-16 object-cover">
+                                <img src="uploaded_img/<?= htmlspecialchars($fetch_cart['product_image']); ?>" alt="<?= htmlspecialchars($product_name); ?>" class="w-16 h-16 object-cover">
                                 <div class="flex-1">
-                                    <p class="font-medium"><?= htmlspecialchars($product_name); ?></p>
-                                    <p class="text-gray-600">Rs. <?= htmlspecialchars($product_price); ?> x <?= htmlspecialchars($product_quantity); ?></p>
+                                    <p class="font-medium"><?= htmlspecialchars($product_name); ?> (<?= htmlspecialchars($size); ?> / <?= htmlspecialchars($color); ?>)</p>
+                                    <p class="text-gray-600">Rs. <?= htmlspecialchars($price); ?> x <?= htmlspecialchars($product_quantity); ?></p>
                                 </div>
                             </div>
                     <?php

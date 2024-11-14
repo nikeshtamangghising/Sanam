@@ -12,46 +12,36 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id']; // Get the logged-in user's ID
 
-// Handle payment status update
-if (isset($_POST['update_payment'])) {
-    $order_id = $_POST['order_id'];
-    $payment_status = $_POST['payment_status'];
-
-    // Validate the payment status input
-    if (empty($payment_status)) {
-        echo "<script>alert('Please select a payment status');</script>";
-    } else {
-        try {
-            // Update the payment status for the order
-            $update_payment = $conn->prepare("UPDATE `orders` SET payment_status = ? WHERE id = ? AND user_id = ?");
-            $update_payment->execute([$payment_status, $order_id, $user_id]);
-
-            echo "<script>alert('Payment status updated successfully'); window.location.href = 'placed_orders.php';</script>";
-        } catch (PDOException $e) {
-            echo "<script>alert('Error updating payment status: " . $e->getMessage() . "'); window.location.href = 'placed_orders.php';</script>";
-        }
-    }
-}
-
-// Handle order deletion
+// Handle order deletion (canceling order)
 if (isset($_GET['delete']) && isset($_SESSION['user_id'])) {
     $order_id = $_GET['delete'];
 
     // Implement CSRF token to prevent CSRF attacks
     if (isset($_SESSION['csrf_token']) && $_SESSION['csrf_token'] === $_GET['csrf_token']) {
         try {
-            // Delete the order from the database
-            $delete_order = $conn->prepare("DELETE FROM `orders` WHERE id = ? AND user_id = ?");
-            $delete_order->execute([$order_id, $user_id]);
+            // Check if the order's payment status is 'pending'
+            $check_status = $conn->prepare("SELECT payment_status FROM `orders` WHERE id = ? AND user_id = ?");
+            $check_status->execute([$order_id, $user_id]);
+            $order = $check_status->fetch(PDO::FETCH_ASSOC);
 
-            echo "<script>alert('Order deleted successfully'); window.location.href = 'placed_orders.php';</script>";
+            if ($order && $order['payment_status'] === 'pending') {
+                // Delete the order from the database if payment status is 'pending'
+                $delete_order = $conn->prepare("DELETE FROM `orders` WHERE id = ? AND user_id = ?");
+                $delete_order->execute([$order_id, $user_id]);
+
+                echo "<script>alert('Order canceled successfully'); window.location.href = 'orders.php';</script>";
+            } else {
+                // If the order is not pending, show a message that it cannot be canceled
+                echo "<script>alert('This order cannot be canceled as it is not in pending status.'); window.location.href = 'orders.php';</script>";
+            }
         } catch (PDOException $e) {
-            echo "<script>alert('Error deleting order: " . $e->getMessage() . "'); window.location.href = 'placed_orders.php';</script>";
+            echo "<script>alert('Error canceling order: " . $e->getMessage() . "'); window.location.href = 'orders.php';</script>";
         }
     } else {
-        echo "<script>alert('Invalid request.'); window.location.href = 'placed_orders.php';</script>";
+        echo "<script>alert('Invalid request.'); window.location.href = 'orders.php';</script>";
     }
 }
+
 
 // Generate CSRF Token for secure requests
 if (!isset($_SESSION['csrf_token'])) {
@@ -86,8 +76,14 @@ if (!isset($_SESSION['csrf_token'])) {
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             <?php
-            // Fetch only orders placed by the logged-in user
-            $select_orders = $conn->prepare("SELECT * FROM `orders` WHERE user_id = ?");
+            // Fetch only orders placed by the logged-in user with product and variant details
+            $select_orders = $conn->prepare("SELECT o.*, p.name AS product_name, pv.size, pv.color, pv.price, 
+                                                u.name AS user_name, u.email AS user_email, u.number AS user_number 
+                                                FROM `orders` o
+                                                LEFT JOIN `products` p ON o.product_id = p.id
+                                                LEFT JOIN `product_variants` pv ON o.variants_id = pv.id
+                                                LEFT JOIN `users` u ON o.user_id = u.id
+                                                WHERE o.user_id = ?");
             $select_orders->execute([$user_id]);
 
             if ($select_orders->rowCount() > 0) {
@@ -96,13 +92,21 @@ if (!isset($_SESSION['csrf_token'])) {
             <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300">
                 <p><strong>Order ID:</strong> <span class="font-medium"><?= $fetch_orders['id']; ?></span></p>
                 <p><strong>Placed On:</strong> <span class="font-medium"><?= $fetch_orders['placed_on']; ?></span></p>
-                <p><strong>Name:</strong> <span class="font-medium"><?= $fetch_orders['name']; ?></span></p>
-                <p><strong>Email:</strong> <span class="font-medium"><?= $fetch_orders['email']; ?></span></p>
-                <p><strong>Phone:</strong> <span class="font-medium"><?= $fetch_orders['number']; ?></span></p>
-                <p><strong>Address:</strong> <span class="font-medium"><?= $fetch_orders['address']; ?></span></p>
+                <p><strong>Product Name:</strong> <span class="font-medium"><?= $fetch_orders['product_name']; ?></span></p>
+                <p><strong>Variant:</strong> <span class="font-medium"><?= $fetch_orders['size']; ?>, <?= $fetch_orders['color']; ?></span></p>
+                <p><strong>Price:</strong> <span class="font-medium">$<?= $fetch_orders['price']; ?>/-</span></p>
                 <p><strong>Total Products:</strong> <span class="font-medium"><?= $fetch_orders['total_products']; ?></span></p>
                 <p><strong>Total Price:</strong> <span class="font-medium">$<?= $fetch_orders['total_price']; ?>/-</span></p>
                 <p><strong>Payment Method:</strong> <span class="font-medium"><?= $fetch_orders['method']; ?></span></p>
+                <p><strong>Payment Status:</strong> <span class="font-medium"><?= ucfirst($fetch_orders['payment_status']); ?></span></p>
+
+                <!-- Update Payment Status -->
+                <form action="" method="POST" class="mt-4">
+                    <input type="hidden" name="order_id" value="<?= $fetch_orders['id']; ?>">
+                    <div class="flex justify-between items-center">
+                        <a href="orders.php?delete=<?= $fetch_orders['id']; ?>&csrf_token=<?= $_SESSION['csrf_token']; ?>" class="text-red-600 hover:text-red-500" onclick="return confirm('Are you sure you want to Canceled this order?');">Canceled Order </a>
+                    </div>
+                </form>
             </div>
             <?php
                 }
@@ -115,8 +119,6 @@ if (!isset($_SESSION['csrf_token'])) {
 
 </section>
 
-<!-- Custom JS -->
-<script src="../js/admin_script.js"></script>
 
 </body>
 </html>

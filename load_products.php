@@ -16,12 +16,34 @@ $size = $_POST['size'] ?? 'all';
 $sort_by = $_POST['sort_by'] ?? 'popular';
 
 // Build the SQL query based on filters
-$sql = "SELECT * FROM products p";
+$sql = "
+    SELECT 
+        p.id AS product_id,
+        p.name AS product_name,
+        p.category,
+        p.gender,
+        p.stock_quantity AS product_stock,
+        p.weight,
+        p.slug,
+        p.meta_description,
+        p.seo_keywords,
+        p.tags,
+        p.image AS product_image,
+        pv.id AS variant_id,
+        pv.size,
+        pv.color,
+        pv.price,
+        pv.stock_quantity AS variant_stock
+    FROM products p
+    LEFT JOIN product_variants pv ON p.id = pv.product_id
+";
 
-// Apply filters
+
+// Initialize filter conditions and parameters
 $sql_conditions = [];
 $params = [];
 
+// Apply filters only if any filter is not 'all'
 if ($category != 'all') {
     $sql_conditions[] = "p.category = :category";
     $params[':category'] = $category;
@@ -31,35 +53,40 @@ if ($gender != 'all') {
     $params[':gender'] = $gender;
 }
 if ($color != 'all') {
-    $sql_conditions[] = "p.color = :color";
+    $sql_conditions[] = "pv.color = :color";  // Assuming 'pv' is a joined table or alias
     $params[':color'] = $color;
 }
 if ($size != 'all') {
-    $sql_conditions[] = "p.size = :size";
+    $sql_conditions[] = "pv.size = :size";  // Assuming 'pv' is a joined table or alias
     $params[':size'] = $size;
 }
 
+// If any filters are applied, add the WHERE clause
 if (count($sql_conditions) > 0) {
-    $sql .= " WHERE " . implode(" AND ", $sql_conditions);
+    $sql .= " WHERE ";  // Start the WHERE clause
+    $sql .= implode(" OR ", $sql_conditions);  // Join all conditions with AND
 }
 
 // Apply sorting
 switch ($sort_by) {
     case 'price_low':
-        $sql .= " ORDER BY p.price ASC";
+        $sql .= " ORDER BY pv.price ASC";
         break;
     case 'price_high':
-        $sql .= " ORDER BY p.price DESC";
+        $sql .= " ORDER BY pv.price DESC";
         break;
     case 'popular':
     default:
-        $sql .= " ORDER BY p.popularity DESC"; // Assuming you have a 'popularity' column
+        $sql .= " ORDER BY p.popularity DESC"; // Default sort by popularity
         break;
 }
 
 try {
-    $stmt = $conn->prepare($sql);
+    // Print the final query to check it (for debugging purposes)
+    // echo $sql;
     
+    $stmt = $conn->prepare($sql);
+
     // Bind parameters dynamically
     foreach ($params as $key => $value) {
         $stmt->bindParam($key, $value);

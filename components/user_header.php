@@ -40,7 +40,10 @@ if ($user_id) {
 
       <!-- Icons and Profile Section -->
       <div class="flex items-center space-x-4 relative">
-         
+         <!-- Cart Icon -->
+         <a href="search.php" class="relative text-black">
+         <i class="fa-solid fa-magnifying-glass"></i>
+         </a>
 
          <!-- Cart Icon -->
          <a href="cart.php" class="relative text-black">

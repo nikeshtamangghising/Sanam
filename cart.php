@@ -41,7 +41,13 @@ if (isset($_POST['update_qty'])) {
 }
 
 // Fetch cart items for the logged-in user
-$select_cart = $conn->prepare("SELECT c.*, p.name, p.price, p.image FROM `cart` c JOIN `products` p ON c.product_id = p.id WHERE c.user_id = ?");
+$select_cart = $conn->prepare("
+    SELECT c.*, p.name, pv.price, p.image, pv.size, pv.color 
+    FROM `cart` c 
+    JOIN `products` p ON c.product_id = p.id 
+    JOIN `product_variants` pv ON c.variant_id = pv.id 
+    WHERE c.user_id = ?
+");
 $select_cart->execute([$user_id]);
 $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
 
@@ -50,8 +56,10 @@ $grand_total = 0;
 
 // Calculate grand total
 foreach ($cart_items as $item) {
+    // Ensure the price is coming from the correct variant
     $grand_total += $item['price'] * $item['quantity'];
 }
+
 
 ?>
 
@@ -92,6 +100,8 @@ foreach ($cart_items as $item) {
                         <div class="flex flex-col space-y-4">
                             <h3 class="font-semibold text-2xl text-gray-800"><?php echo $item['name']; ?></h3>
                             <p class="text-lg text-gray-600">Rs. <?php echo $item['price']; ?></p>
+                            <p class="text-lg text-gray-600">Size: <?php echo $item['size']; ?></p>
+                            <p class="text-lg text-gray-600">Color: <?php echo $item['color']; ?></p>
                             <form method="POST" action="cart.php" class="mt-4">
                                 <input type="hidden" name="cart_id" value="<?php echo $item['id']; ?>">
                                 <input type="number" name="qty" value="<?php echo $item['quantity']; ?>" min="1" class="w-16 p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
